@@ -31,29 +31,12 @@ const ReportGenerator = {
     const reportContainer = document.getElementById('reportViewContent');
     if (!reportContainer) return;
 
-    const plan = PlanAnalyzer.activePlan || SamplePlans.plans[0];
-    const takeoff = PlanAnalyzer.currentTakeoff || {
-      builtUpSqFt: plan.builtUpAreaSqFt,
-      builtUpSqM: plan.builtUpAreaSqM,
-      floors: plan.floors || 1,
-      quantities: {
-        cementBags: 340,
-        sandM3: 28.5,
-        sandCft: 1006,
-        aggM3: 31.0,
-        aggCft: 1094,
-        bricksNos: 12500,
-        steelKg: 2150,
-        steelMT: 2.15,
-        concreteM3: 22.5,
-        plasterM2: 280,
-        flooringM2: 72,
-        doorsNos: 7,
-        windowsNos: 6,
-        paintingM2: 280
-      }
-    };
+    if (!PlanAnalyzer.currentTakeoff) {
+      PlanAnalyzer.generateTakeoff();
+    }
 
+    const plan = PlanAnalyzer.activePlan || SamplePlans.plans[0];
+    const takeoff = PlanAnalyzer.currentTakeoff;
     const boqTotals = BOQEngine.getTotals();
     const boqItems = BOQEngine.items;
 
@@ -221,6 +204,7 @@ const ReportGenerator = {
   },
 
   printPDF: function() {
+    this.render();
     window.print();
   }
 };

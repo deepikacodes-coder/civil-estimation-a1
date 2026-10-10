@@ -394,6 +394,7 @@ const CivilCalculators = {
         break;
       case 'trapezoidal_footing': // Frustum: p1 = Area1, p2 = Area2, p3 = Depth
         // V = h/3 * (A1 + A2 + sqrt(A1*A2))
+        area = (p1 + p2) / 2;
         volume = (p3 / 3) * (p1 + p2 + Math.sqrt(p1 * p2));
         break;
     }

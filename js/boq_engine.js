@@ -143,12 +143,14 @@ const BOQEngine = {
           <td class="text-center"><span class="badge badge-unit">${item.unit}</span></td>
           <td class="text-right">
             <input type="number" step="any" class="boq-inline-input text-right" value="${item.qty}" 
+                   oninput="BOQEngine.updateItemQty(${item.id}, this.value)"
                    onchange="BOQEngine.updateItemQty(${item.id}, this.value)">
           </td>
           <td class="text-right">
             <div class="inline-flex items-center gap-1">
               <span class="text-xs text-slate-400">₹</span>
               <input type="number" step="any" class="boq-inline-input text-right font-mono" value="${item.rate}" 
+                     oninput="BOQEngine.updateItemRate(${item.id}, this.value)"
                      onchange="BOQEngine.updateItemRate(${item.id}, this.value)">
             </div>
           </td>
@@ -172,7 +174,7 @@ const BOQEngine = {
     this.items.forEach(item => {
       const el = document.getElementById(`itemAmount_${item.id}`);
       if (el) {
-        const amt = item.qty * item.rate;
+        const amt = (parseFloat(item.qty) || 0) * (parseFloat(item.rate) || 0);
         el.textContent = `₹ ${amt.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
       }
     });
@@ -197,14 +199,15 @@ const BOQEngine = {
       return;
     }
 
-    let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'Sl.No,Item Description,Unit,Quantity,Rate (INR),Amount (INR),Remarks\r\n';
+    let csvContent = 'Sl.No,Item Description,Unit,Quantity,Rate (INR),Amount (INR),Remarks\r\n';
 
     this.items.forEach((item, index) => {
       const cleanDesc = `"${item.desc.replace(/"/g, '""')}"`;
       const cleanRemarks = `"${(item.remarks || '').replace(/"/g, '""')}"`;
-      const amount = (item.qty * item.rate).toFixed(2);
-      csvContent += `${index + 1},${cleanDesc},${item.unit},${item.qty},${item.rate},${amount},${cleanRemarks}\r\n`;
+      const qty = parseFloat(item.qty) || 0;
+      const rate = parseFloat(item.rate) || 0;
+      const amount = (qty * rate).toFixed(2);
+      csvContent += `${index + 1},${cleanDesc},${item.unit},${qty},${rate},${amount},${cleanRemarks}\r\n`;
     });
 
     const totals = this.getTotals();
@@ -213,13 +216,15 @@ const BOQEngine = {
     csvContent += `,,,GST / Taxes (${totals.taxPct}%),,${totals.taxAmount.toFixed(2)},\r\n`;
     csvContent += `,,,Grand Total Estimate,,${totals.grandTotal.toFixed(2)},\r\n`;
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
+    link.setAttribute('href', url);
     link.setAttribute('download', `Civil_Estimation_A1_BOQ_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     App.showToast('BOQ exported to CSV successfully!', 'success');
   }

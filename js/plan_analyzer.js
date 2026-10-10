@@ -27,6 +27,9 @@ const PlanAnalyzer = {
     const uploadDropzone = document.getElementById('uploadDropzone');
 
     if (fileInput) {
+      fileInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
       fileInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
           this.handleFileUpload(e.target.files[0]);
@@ -52,17 +55,35 @@ const PlanAnalyzer = {
       });
     }
 
-    // Canvas click for calibration
+    // Canvas click for calibration with coordinate scaling
     if (this.canvas) {
       this.canvas.addEventListener('click', (e) => {
         if (this.isCalibrating) {
           const rect = this.canvas.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
+          const scaleX = this.canvas.width / rect.width;
+          const scaleY = this.canvas.height / rect.height;
+          const x = (e.clientX - rect.left) * scaleX;
+          const y = (e.clientY - rect.top) * scaleY;
           this.handleCalibrationClick(x, y);
         }
       });
     }
+
+    // Dynamic dimension change listeners
+    const liveInputs = ['planAreaInput', 'planFloorsInput', 'planFloorHeightInput', 'planWallThickInput'];
+    liveInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const updateIfActive = () => {
+          const results = document.getElementById('aiResultsSection');
+          if (results && !results.classList.contains('hidden')) {
+            this.generateTakeoff();
+          }
+        };
+        el.addEventListener('input', updateIfActive);
+        el.addEventListener('change', updateIfActive);
+      }
+    });
   },
 
   loadSamplePlan: function(planId) {
@@ -74,15 +95,30 @@ const PlanAnalyzer = {
     // Update UI fields
     const areaInput = document.getElementById('planAreaInput');
     const floorSelect = document.getElementById('planFloorsInput');
+    const floorHeightInput = document.getElementById('planFloorHeightInput');
+    const presetSelect = document.getElementById('presetPlanSelect');
     const filenameLabel = document.getElementById('selectedFileName');
+    const fileSizeLabel = document.getElementById('selectedFileSize');
     const fileStatus = document.getElementById('fileStatusBadge');
 
     if (areaInput) areaInput.value = sample.builtUpAreaSqFt;
     if (floorSelect) floorSelect.value = sample.floors;
+    if (floorHeightInput) floorHeightInput.value = sample.floorHeightM || 3.0;
+    if (presetSelect) presetSelect.value = sample.id;
     if (filenameLabel) filenameLabel.textContent = `${sample.name}.dwg / .png`;
-    if (fileStatus) fileStatus.className = 'status-badge status-ready';
+    if (fileSizeLabel) fileSizeLabel.textContent = 'Sample Architectural Drawing';
+    if (fileStatus) {
+      fileStatus.textContent = 'Plan Ready';
+      fileStatus.className = 'status-badge status-ready';
+    }
 
     this.render();
+
+    // If takeoff results are currently open, immediately re-compute for the new plan
+    const resultsContainer = document.getElementById('aiResultsSection');
+    if (resultsContainer && !resultsContainer.classList.contains('hidden')) {
+      this.generateTakeoff();
+    }
   },
 
   handleFileUpload: function(file) {
@@ -97,15 +133,21 @@ const PlanAnalyzer = {
       fileStatus.className = 'status-badge status-ready';
     }
 
-    if (file.type === 'application/pdf') {
+    // Hide old results section if open
+    const resultsContainer = document.getElementById('aiResultsSection');
+    if (resultsContainer) resultsContainer.classList.add('hidden');
+    this.currentTakeoff = null;
+
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       // PDF handling: For prototype simulation, render PDF blueprint banner + plan
       this.loadSamplePlan('plan_villa');
       if (filenameLabel) filenameLabel.textContent = `${file.name} (PDF Vector Drawing)`;
+      if (fileSizeLabel) fileSizeLabel.textContent = `${(file.size / 1024).toFixed(1)} KB`;
       App.showToast('PDF blueprint loaded successfully! Vector layers extracted.', 'success');
       return;
     }
 
-    if (file.type.startsWith('image/')) {
+    if (file.type.startsWith('image/') || /\.(jpe?g|png)$/i.test(file.name)) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
@@ -237,6 +279,15 @@ const PlanAnalyzer = {
   },
 
   startCalibration: function() {
+    if (this.isCalibrating) {
+      this.isCalibrating = false;
+      this.calibrationPoints = [];
+      const calibBtn = document.getElementById('btnCalibrateScale');
+      if (calibBtn) calibBtn.textContent = '📏 Calibrate Scale';
+      this.render();
+      App.showToast('Scale calibration cancelled.', 'info');
+      return;
+    }
     this.isCalibrating = true;
     this.calibrationPoints = [];
     App.showToast('Scale Calibration: Click Point A on the plan with known length.', 'info');
@@ -288,6 +339,8 @@ const PlanAnalyzer = {
     const stepLabel = document.getElementById('aiStepLabel');
 
     if (progressModal) progressModal.classList.remove('hidden');
+    if (progressBar) progressBar.style.width = '0%';
+    if (stepLabel) stepLabel.textContent = 'Stage 1/5: Initializing CAD Pre-processing...';
 
     let currentStep = 0;
     const interval = setInterval(() => {
@@ -311,6 +364,8 @@ const PlanAnalyzer = {
   generateTakeoff: function() {
     const areaInput = document.getElementById('planAreaInput');
     const floorSelect = document.getElementById('planFloorsInput');
+    const heightInput = document.getElementById('planFloorHeightInput');
+    const wallThickSelect = document.getElementById('planWallThickInput');
 
     const floors = parseInt(floorSelect ? floorSelect.value : 1) || 1;
     let manualArea = parseFloat(areaInput ? areaInput.value : 0);
@@ -320,14 +375,18 @@ const PlanAnalyzer = {
     const builtUpSqM = builtUpSqFt * 0.092903;
     const totalAreaSqM = builtUpSqM * floors;
 
-    const floorHeightM = plan.floorHeightM || 3.0;
-    const outerWallLen = (plan.detectedWalls.outerWallLengthM || 45) * floors;
-    const innerWallLen = (plan.detectedWalls.innerWallLengthM || 30) * floors;
+    const floorHeightM = heightInput ? (parseFloat(heightInput.value) || 3.0) : (plan.floorHeightM || 3.0);
+    const isAAC = wallThickSelect && wallThickSelect.value === '200';
+    const outerThick = isAAC ? 0.20 : 0.23;
+    const innerThick = isAAC ? 0.10 : 0.115;
+
+    const detected = plan.detectedWalls || { outerWallLengthM: 45, innerWallLengthM: 30 };
+    const outerWallLen = (detected.outerWallLengthM || 45) * floors;
+    const innerWallLen = (detected.innerWallLengthM || 30) * floors;
 
     // 1. Brickwork Volume
-    // Outer wall: 230mm thickness; Inner wall: 115mm thickness
-    const outerWallVolM3 = outerWallLen * floorHeightM * 0.23;
-    const innerWallVolM3 = innerWallLen * floorHeightM * 0.115;
+    const outerWallVolM3 = outerWallLen * floorHeightM * outerThick;
+    const innerWallVolM3 = innerWallLen * floorHeightM * innerThick;
     // Deduct openings: ~15% for doors & windows
     const grossWallVolM3 = outerWallVolM3 + innerWallVolM3;
     const netBrickworkVolM3 = grossWallVolM3 * 0.85;

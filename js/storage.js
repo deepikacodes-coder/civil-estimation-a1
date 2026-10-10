@@ -10,6 +10,7 @@ const StorageManager = {
 
   init: function() {
     this.seedSampleProjectsIfEmpty();
+    this.renderRecentProjectsHome();
   },
 
   // SEED SAMPLE PROJECTS
@@ -74,13 +75,14 @@ const StorageManager = {
       floors: parseInt(floorSelect ? floorSelect.value : 1),
       grandTotal: boqTotals.grandTotal,
       planId: plan.id,
-      boqItems: BOQEngine.items,
-      takeoff: PlanAnalyzer.currentTakeoff
+      boqItems: JSON.parse(JSON.stringify(BOQEngine.items || [])),
+      takeoff: JSON.parse(JSON.stringify(PlanAnalyzer.currentTakeoff || {}))
     };
 
     projects.unshift(project);
     localStorage.setItem(this.PROJECTS_KEY, JSON.stringify(projects));
     this.renderSavedProjectsList();
+    this.renderRecentProjectsHome();
     App.showToast(`Project "${project.name}" saved successfully!`, 'success');
     return project;
   },
@@ -98,6 +100,8 @@ const StorageManager = {
 
     if (project.planId) {
       PlanAnalyzer.loadSamplePlan(project.planId);
+      const presetSelect = document.getElementById('presetPlanSelect');
+      if (presetSelect) presetSelect.value = project.planId;
     }
     if (project.builtUpSqFt) {
       const areaEl = document.getElementById('planAreaInput');
@@ -107,15 +111,22 @@ const StorageManager = {
       const flrEl = document.getElementById('planFloorsInput');
       if (flrEl) flrEl.value = project.floors;
     }
+
+    if (project.takeoff && project.takeoff.quantities) {
+      PlanAnalyzer.currentTakeoff = project.takeoff;
+      PlanAnalyzer.renderTakeoffUI();
+    } else {
+      PlanAnalyzer.generateTakeoff();
+    }
+
     if (project.boqItems && project.boqItems.length > 0) {
       BOQEngine.items = project.boqItems;
       BOQEngine.render();
-    }
-    if (project.takeoff) {
-      PlanAnalyzer.currentTakeoff = project.takeoff;
-      PlanAnalyzer.renderTakeoffUI();
+    } else if (PlanAnalyzer.currentTakeoff) {
+      BOQEngine.importFromPlanTakeoff(PlanAnalyzer.currentTakeoff);
     }
 
+    ReportGenerator.render();
     App.switchTab('plan');
     App.showToast(`Loaded project: ${project.name}`, 'info');
   },
@@ -126,7 +137,33 @@ const StorageManager = {
     projects = projects.filter(p => p.id !== id);
     localStorage.setItem(this.PROJECTS_KEY, JSON.stringify(projects));
     this.renderSavedProjectsList();
+    this.renderRecentProjectsHome();
     App.showToast('Project deleted.', 'info');
+  },
+
+  renderRecentProjectsHome: function() {
+    const container = document.getElementById('quickRecentProjects');
+    if (!container) return;
+
+    const projects = this.getProjects().slice(0, 2);
+    if (projects.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full p-4 bg-white border border-dashed border-slate-200 rounded-lg text-center text-slate-400 text-xs">
+          No recent projects found. Save a project to see it here.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = projects.map(p => `
+      <div class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between cursor-pointer hover:border-primary transition" onclick="StorageManager.loadProject('${p.id}')">
+        <div>
+          <h4 class="font-bold text-sm text-slate-800">${p.name}</h4>
+          <p class="text-xs text-slate-500">${p.builtUpSqFt} sq.ft ${p.floors > 1 ? `(${p.floors} Flr)` : ''} • ${p.location}</p>
+        </div>
+        <span class="font-mono font-bold text-sm text-primary">₹ ${p.grandTotal ? p.grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '—'}</span>
+      </div>
+    `).join('');
   },
 
   renderSavedProjectsList: function() {

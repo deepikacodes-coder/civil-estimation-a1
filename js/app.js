@@ -41,14 +41,60 @@ const App = {
   },
 
   bindNavigation: function() {
-    // Bottom nav and Top nav items
+    // Bottom nav, Top nav and all data-nav-target items
     document.querySelectorAll('[data-nav-target]').forEach(item => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
         const target = item.dataset.navTarget;
-        this.switchTab(target);
+        if (target) {
+          window.location.hash = target;
+          this.switchTab(target);
+        }
       });
     });
+
+    // Brand logo navigation to Home
+    const brand = document.querySelector('.brand-wrapper');
+    if (brand) {
+      brand.style.cursor = 'pointer';
+      brand.addEventListener('click', () => {
+        window.location.hash = 'home';
+        this.switchTab('home');
+      });
+    }
+
+    // Modal backdrop click handling
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.add('hidden');
+        }
+      });
+    });
+
+    // Escape key closes open modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => {
+          if (modal.id !== 'aiProgressModal') {
+            modal.classList.add('hidden');
+          }
+        });
+      }
+    });
+
+    // Hash change routing
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash !== this.activeTab && ['home', 'plan', 'calculators', 'boq', 'report', 'saved'].includes(hash)) {
+        this.switchTab(hash);
+      }
+    });
+
+    const initialHash = window.location.hash.replace('#', '');
+    if (initialHash && ['home', 'plan', 'calculators', 'boq', 'report', 'saved'].includes(initialHash)) {
+      this.switchTab(initialHash);
+    }
   },
 
   switchTab: function(tabName) {
@@ -178,11 +224,12 @@ const App = {
     if (this.activeCategory === 'favourites') {
       this.renderToolCards();
     } else {
-      // Refresh star status on visible cards
       document.querySelectorAll('.fav-star-btn').forEach(btn => {
-        const card = btn.closest('.tool-card');
-        if (card) {
-          // Re-render
+        const onclickAttr = btn.getAttribute('onclick') || '';
+        const match = onclickAttr.match(/toggleFavourite\(['"]([^'"]+)['"]\)/);
+        if (match) {
+          const toolId = match[1];
+          btn.classList.toggle('active', StorageManager.isFavourite(toolId));
         }
       });
     }
@@ -568,7 +615,11 @@ const App = {
         }
       };
       ['inp_cost_area', 'inp_cost_floors', 'inp_cost_quality'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -581,7 +632,7 @@ const App = {
         const box = document.getElementById('conc_result_box');
         if (box) {
           box.innerHTML = `
-            <div class="result-title">M20 Concrete Takeoff (${res.wetVolumeM3} m³ wet / ${res.dryVolumeM3.toFixed(2)} m³ dry)</div>
+            <div class="result-title">${res.grade} Concrete Takeoff (${res.wetVolumeM3} m³ wet / ${res.dryVolumeM3.toFixed(2)} m³ dry)</div>
             <div class="result-grid-kpi mt-2">
               <div class="kpi-mini"><div>${res.cementBags}</div><span>Cement Bags</span></div>
               <div class="kpi-mini"><div>${res.sandCft.toFixed(1)}</div><span>Sand (cft)</span></div>
@@ -595,7 +646,11 @@ const App = {
         }
       };
       ['inp_conc_vol', 'inp_conc_grade'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -620,7 +675,11 @@ const App = {
         }
       };
       ['inp_bw_len', 'inp_bw_ht', 'inp_bw_thick', 'inp_bw_mortar'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -672,7 +731,10 @@ const App = {
       methodSelect.addEventListener('change', update);
       ['inp_steel_vol', 'inp_steel_member', 'inp_bar_dia', 'inp_bar_len', 'inp_bar_count'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('input', update);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -680,22 +742,28 @@ const App = {
     if (toolId === 'calc_flooring') {
       const update = () => {
         const area = document.getElementById('inp_flr_area').value;
+        const tileSizeVal = document.getElementById('inp_flr_tilesize').value || '600x600';
+        const [tileW, tileL] = tileSizeVal.split('x').map(Number);
         const waste = document.getElementById('inp_flr_waste').value;
-        const res = CivilCalculators.calculateFlooring(area, 600, 600, waste);
+        const res = CivilCalculators.calculateFlooring(area, tileW || 600, tileL || 600, waste);
         const box = document.getElementById('flr_result_box');
         if (box) {
           box.innerHTML = `
-            <div class="result-title">Tiles Required (${res.floorAreaSqFt.toFixed(0)} sq.ft)</div>
+            <div class="result-title">Tiles Required (${res.floorAreaSqFt.toFixed(0)} sq.ft - ${tileW || 600}×${tileL || 600}mm)</div>
             <div class="result-big-value">${res.grossTiles} Tiles</div>
             <div class="result-subtitle">Mortar: ${res.cementBags} Cement Bags • ${res.sandCft.toFixed(1)} cft Sand</div>
-            <button class="btn btn-sm btn-primary w-full mt-3" onclick="BOQEngine.addItem('Vitrified Tile Flooring 600x600mm', 'm²', ${res.floorAreaSqM}, 850, 'Including 20mm bedding mortar'); App.closeModal(); App.switchTab('boq');">
+            <button class="btn btn-sm btn-primary w-full mt-3" onclick="BOQEngine.addItem('Vitrified Tile Flooring ${tileW || 600}x${tileL || 600}mm', 'm²', ${res.floorAreaSqM}, 850, 'Including 20mm bedding mortar'); App.closeModal(); App.switchTab('boq');">
               ➕ Add to Project BOQ
             </button>
           `;
         }
       };
       ['inp_flr_area', 'inp_flr_tilesize', 'inp_flr_waste'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -722,7 +790,11 @@ const App = {
         }
       };
       ['inp_paint_area', 'inp_paint_type', 'inp_paint_coats'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -891,7 +963,11 @@ const App = {
         }
       };
       ['inp_roof_l', 'inp_roof_w', 'inp_roof_type', 'inp_roof_pitch', 'inp_roof_overhang'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
@@ -900,6 +976,24 @@ const App = {
       const shapeSelect = document.getElementById('inp_geom_shape');
       const update = () => {
         const shape = shapeSelect.value;
+        const l1 = document.getElementById('lbl_p1');
+        const l2 = document.getElementById('lbl_p2');
+        const l3 = document.getElementById('lbl_p3');
+
+        if (shape === 'rectangle') {
+          if (l1) l1.textContent = 'Length L (m):';
+          if (l2) l2.textContent = 'Width W (m):';
+          if (l3) l3.textContent = 'Height H (m):';
+        } else if (shape === 'circle') {
+          if (l1) l1.textContent = 'Radius R (m):';
+          if (l2) l2.textContent = 'Height H (m):';
+          if (l3) l3.textContent = 'Depth (m):';
+        } else if (shape === 'trapezoidal_footing') {
+          if (l1) l1.textContent = 'Base Area A1 (m²):';
+          if (l2) l2.textContent = 'Top Area A2 (m²):';
+          if (l3) l3.textContent = 'Depth H (m):';
+        }
+
         const p1 = document.getElementById('inp_geom_p1').value;
         const p2 = document.getElementById('inp_geom_p2').value;
         const p3 = document.getElementById('inp_geom_p3').value;
@@ -918,7 +1012,11 @@ const App = {
       };
       shapeSelect.addEventListener('change', update);
       ['inp_geom_p1', 'inp_geom_p2', 'inp_geom_p3'].forEach(id => {
-        document.getElementById(id).addEventListener('input', update);
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', update);
+          el.addEventListener('change', update);
+        }
       });
       update();
     }
