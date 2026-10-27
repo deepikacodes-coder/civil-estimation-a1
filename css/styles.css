@@ -1,23 +1,23 @@
 /* ==========================================================================
    CIVIL ESTIMATION A1 - Mobile-App-Style Responsive Theme & Stylesheet
-   Modern Civil Engineering Aesthetic: Slate Navy (#0f172a), Safety Amber (#f59e0b), 
-   Cadet Cyan (#0284c7), and Emerald Takeoff (#10b981).
+   Civil Engineering Aesthetic: Deep Navy (#102A43), Construction Orange (#F28C28),
+   Clean White (#FFFFFF), and Light Grey (#F3F5F7).
    ========================================================================== */
 
 :root {
-  --primary: #0284c7;
-  --primary-dark: #0369a1;
-  --primary-light: #e0f2fe;
-  --accent: #f59e0b;
-  --accent-hover: #d97706;
+  --primary: #102A43;
+  --primary-dark: #081726;
+  --primary-light: #e6edf4;
+  --accent: #F28C28;
+  --accent-hover: #d87515;
   --success: #10b981;
   --danger: #ef4444;
-  --bg-app: #f8fafc;
+  --bg-app: #F3F5F7;
   --surface: #ffffff;
-  --surface-alt: #f1f5f9;
+  --surface-alt: #e9ecef;
   --border: #e2e8f0;
   --border-strong: #cbd5e1;
-  --text-main: #0f172a;
+  --text-main: #102A43;
   --text-muted: #64748b;
   --text-sub: #94a3b8;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -79,14 +79,14 @@ body {
 }
 
 .app-logo-badge {
-  background: linear-gradient(135deg, #0284c7, #0f172a);
+  background: linear-gradient(135deg, #102A43, #F28C28);
   color: #ffffff;
   font-weight: 800;
   font-size: 13px;
   letter-spacing: 0.5px;
   padding: 6px 10px;
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 2px 4px rgba(16, 42, 67, 0.3);
 }
 
 .app-title-group {
@@ -1450,3 +1450,195 @@ body {
     margin: 15mm;
   }
 }
+
+/* ==========================================================================
+   MATERIAL RATES, PENDING BADGES, COST BREAKDOWN & UI ENHANCEMENTS
+   ========================================================================== */
+
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.badge-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.row-pending {
+  background-color: #fffdf5 !important;
+}
+
+.row-invalid {
+  background-color: #fef2f2 !important;
+}
+
+.rate-inline-input {
+  width: 95px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text-main);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.rate-inline-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(242, 140, 40, 0.2);
+}
+
+.rate-inline-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text-main);
+  outline: none;
+}
+
+.rate-inline-text {
+  width: 100%;
+  padding: 5px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--text-main);
+}
+
+.rate-inline-text:hover, .rate-inline-text:focus {
+  border-color: var(--border);
+  background: var(--surface);
+  outline: none;
+}
+
+.cost-summary-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.cost-summary-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.cost-summary-box.highlight {
+  background: #102A43;
+  color: #ffffff;
+  border-color: #102A43;
+}
+
+.cost-summary-box.highlight .cost-box-value {
+  color: #F28C28;
+}
+
+.cost-summary-box.highlight .cost-box-title {
+  color: #cbd5e1;
+}
+
+.cost-box-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.cost-box-value {
+  font-size: 18px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  margin-top: 4px;
+}
+
+.cost-box-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.header-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.view-disclaimer {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 11.5px;
+  color: #92400e;
+  line-height: 1.4;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.border-red-500 {
+  border-color: #ef4444 !important;
+}
+

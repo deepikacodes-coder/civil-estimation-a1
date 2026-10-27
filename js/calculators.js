@@ -1,15 +1,33 @@
 /**
  * CIVIL ESTIMATION A1 - Civil Engineering Calculators Engine
  * Standard-compliant engineering equations (IS 456:2000, IS 1200, IS 2212, CPWD)
+ * Centralized calculation utilities with rigorous input validation and documented assumptions.
  */
 
 const CivilCalculators = {
 
+  // Default parameters for Reset functionality
+  defaults: {
+    calc_cost: { areaSqFt: 1000, floors: 1, qualityType: 'standard', locationFactor: 1.0 },
+    calc_brick: { wallLengthM: 10, wallHeightM: 3, wallThicknessMm: 230, mortarRatio: '1:6', brickType: 'modular' },
+    calc_plaster: { plasterAreaSqM: 100, thicknessMm: 12, mixRatio: '1:4' },
+    calc_concrete: { volumeM3: 5.0, grade: 'M20', dryFactor: 1.54 },
+    calc_steel: { concreteVolumeM3: 5.0, memberType: 'slab', diameterMm: 12, lengthM: 12, barCount: 10 },
+    calc_batch: { dryVolumeM3: 1.0, partCement: 1, partSand: 2, partAgg: 4 },
+    calc_flooring: { floorAreaSqM: 50, tileWidthMm: 600, tileLengthMm: 600, wastagePct: 8 },
+    calc_painting: { surfaceAreaSqM: 150, paintType: 'interior_emulsion', coats: 2 },
+    calc_excavation: { lengthM: 10, widthM: 1.2, depthM: 1.5, soilBulkingPct: 25 },
+    calc_openings: { doorsCount: 4, windowsCount: 4, ventCount: 2 },
+    calc_roof: { planLengthM: 10, planWidthM: 8, roofType: 'pitched', pitchDegrees: 20, overhangM: 0.45 },
+    calc_geometry: { shape: 'trapezoidal_footing', p1: 4.0, p2: 1.0, p3: 0.6 },
+    calc_unit: { value: 100, type: 'area', fromUnit: 'sqft', toUnit: 'sqm' }
+  },
+
   // 1. CONSTRUCTION COST CALCULATOR
   calculateConstructionCost: function(areaSqFt, floors = 1, qualityType = 'standard', locationFactor = 1.0) {
-    areaSqFt = parseFloat(areaSqFt) || 0;
-    floors = parseInt(floors) || 1;
-    locationFactor = parseFloat(locationFactor) || 1.0;
+    areaSqFt = Math.max(0, parseFloat(areaSqFt) || 0);
+    floors = Math.max(1, parseInt(floors) || 1);
+    locationFactor = Math.max(0.1, parseFloat(locationFactor) || 1.0);
 
     const baseRates = {
       'basic': 1400,    // ₹1,400 per sq.ft (Basic finish, red brick, standard vitrified)
@@ -22,7 +40,7 @@ const CivilCalculators = {
     const totalBuiltUpArea = areaSqFt * floors;
     const totalCost = totalBuiltUpArea * ratePerSqFt;
 
-    // Standard Civil Breakdown:
+    // Standard Civil Cost Breakdown:
     // Structure: 52% (Civil, Foundation, RCC, Masonry)
     // Finishes: 22% (Flooring, Plaster, Paint, False Ceiling)
     // MEP (Mechanical, Electrical, Plumbing): 16%
@@ -38,39 +56,40 @@ const CivilCalculators = {
         finishes: totalCost * 0.22,
         mep: totalCost * 0.16,
         fixtures: totalCost * 0.10
-      }
+      },
+      assumptions: 'Based on CPWD Plinth Area Rates and prevailing residential construction indexes. Actual cost varies by site topography, soil conditions, and structural specifications.'
     };
   },
 
-  // 2. BRICKWORK & PLASTER CALCULATOR
+  // 2. BRICKWORK CALCULATOR (IS 2212)
   calculateBrickwork: function(wallLengthM, wallHeightM, wallThicknessMm = 230, mortarRatio = '1:6', brickType = 'modular') {
-    wallLengthM = parseFloat(wallLengthM) || 0;
-    wallHeightM = parseFloat(wallHeightM) || 0;
-    const thicknessM = (parseFloat(wallThicknessMm) || 230) / 1000;
+    wallLengthM = Math.max(0, parseFloat(wallLengthM) || 0);
+    wallHeightM = Math.max(0, parseFloat(wallHeightM) || 0);
+    const thicknessM = Math.max(0.05, (parseFloat(wallThicknessMm) || 230) / 1000);
 
     const wallVolumeM3 = wallLengthM * wallHeightM * thicknessM;
 
-    // Modular brick: 190 x 90 x 90 mm; with mortar 200 x 100 x 100 mm -> 500 bricks / m3
-    // Traditional brick: 229 x 114 x 76 mm -> 480-500 bricks / m3
+    // Modular brick: 190 x 90 x 90 mm; with mortar 200 x 100 x 100 mm -> 500 bricks / m³
+    // Traditional brick: 229 x 114 x 76 mm -> 490 bricks / m³
     const bricksPerM3 = brickType === 'traditional' ? 490 : 500;
-    const totalBricks = Math.ceil(wallVolumeM3 * bricksPerM3 * 1.05); // +5% wastage
+    const totalBricks = Math.ceil(wallVolumeM3 * bricksPerM3 * 1.05); // +5% wastage allowance
 
     // Mortar volume: ~30% of brickwork wet volume
     const wetMortarM3 = wallVolumeM3 * 0.30;
-    const dryMortarM3 = wetMortarM3 * 1.33; // 33% increase for dry mix & void filling
+    const dryMortarM3 = wetMortarM3 * 1.33; // 33% increase for dry mix void filling
 
     // Mix ratios
     let cementPart = 1;
     let sandPart = 6;
-    if (mortarRatio === '1:4') { sandPart = 4; }
-    else if (mortarRatio === '1:5') { sandPart = 5; }
-    else if (mortarRatio === '1:3') { sandPart = 3; }
+    if (mortarRatio === '1:3') sandPart = 3;
+    else if (mortarRatio === '1:4') sandPart = 4;
+    else if (mortarRatio === '1:5') sandPart = 5;
 
     const totalParts = cementPart + sandPart;
     const cementM3 = (dryMortarM3 * cementPart) / totalParts;
     const sandM3 = (dryMortarM3 * sandPart) / totalParts;
 
-    // Density of cement = 1440 kg/m3. 1 bag = 50 kg
+    // Density of cement = 1440 kg/m³. 1 bag = 50 kg
     const cementBags = Math.ceil((cementM3 * 1440) / 50);
     const sandCft = sandM3 * 35.3147;
 
@@ -81,23 +100,25 @@ const CivilCalculators = {
       dryMortarM3: dryMortarM3,
       cementBags: cementBags,
       sandM3: sandM3,
-      sandCft: sandCft
+      sandCft: sandCft,
+      assumptions: 'Modular brick dimensions: 190×90×90 mm (200×100×100 mm with mortar) per IS 2212. Includes 5% wastage and 33% dry mortar void factor.'
     };
   },
 
+  // 3. PLASTER CALCULATOR (IS 1200 Part 12)
   calculatePlaster: function(plasterAreaSqM, thicknessMm = 12, mixRatio = '1:4') {
-    plasterAreaSqM = parseFloat(plasterAreaSqM) || 0;
-    const thicknessM = (parseFloat(thicknessMm) || 12) / 1000;
+    plasterAreaSqM = Math.max(0, parseFloat(plasterAreaSqM) || 0);
+    const thicknessM = Math.max(0.005, (parseFloat(thicknessMm) || 12) / 1000);
 
     const wetVolumeM3 = plasterAreaSqM * thicknessM;
-    // Add 20% for joints/filling and 30% for dry bulk volume -> factor approx 1.56
+    // Add 20% for masonry joints/grooves and 30% for dry bulk volume -> 1.20 × 1.30 ≈ 1.56 dry factor
     const dryVolumeM3 = wetVolumeM3 * 1.56;
 
     let cementPart = 1;
     let sandPart = 4;
     if (mixRatio === '1:3') sandPart = 3;
-    if (mixRatio === '1:5') sandPart = 5;
-    if (mixRatio === '1:6') sandPart = 6;
+    else if (mixRatio === '1:5') sandPart = 5;
+    else if (mixRatio === '1:6') sandPart = 6;
 
     const totalParts = cementPart + sandPart;
     const cementM3 = (dryVolumeM3 * cementPart) / totalParts;
@@ -113,18 +134,19 @@ const CivilCalculators = {
       dryVolumeM3: dryVolumeM3,
       cementBags: cementBags,
       sandM3: sandM3,
-      sandCft: sandCft
+      sandCft: sandCft,
+      assumptions: 'Dry volume coefficient 1.56 accounts for mortar filling masonry unevenness (20%) and dry aggregate void consolidation (30%) as per CPWD specifications.'
     };
   },
 
-  // 3. CONCRETE CALCULATOR (IS 456:2000)
+  // 4. CONCRETE CALCULATOR (IS 456:2000)
   calculateConcrete: function(volumeM3, grade = 'M20', dryFactor = 1.54) {
-    volumeM3 = parseFloat(volumeM3) || 0;
-    dryFactor = parseFloat(dryFactor) || 1.54;
+    volumeM3 = Math.max(0, parseFloat(volumeM3) || 0);
+    dryFactor = Math.max(1.0, parseFloat(dryFactor) || 1.54);
 
     const dryVolumeM3 = volumeM3 * dryFactor;
 
-    // Nominal Mix Proportions [Cement, Sand, Coarse Aggregate]
+    // Nominal Mix Proportions [Cement, Sand, Coarse Aggregate, W/C ratio]
     const gradeRatios = {
       'M7.5': { c: 1, s: 4, a: 8, wc: 0.55 },
       'M10':  { c: 1, s: 3, a: 6, wc: 0.55 },
@@ -154,21 +176,22 @@ const CivilCalculators = {
       sandCft: sandCft,
       aggM3: aggVolM3,
       aggCft: aggCft,
-      waterLiters: Math.round(waterLiters)
+      waterLiters: Math.round(waterLiters),
+      assumptions: 'IS 456 nominal mix proportions with 54% dry bulking allowance. Concrete for multi-storey frames must be verified with formal laboratory mix design (IS 10262).'
     };
   },
 
-  // 4. STEEL QUANTITY CALCULATOR (Thumb Rules + BBS)
+  // 5. STEEL QUANTITY & REBAR CALCULATOR (IS 456 & BBS)
   calculateSteelByVolume: function(concreteVolumeM3, memberType = 'slab') {
-    concreteVolumeM3 = parseFloat(concreteVolumeM3) || 0;
+    concreteVolumeM3 = Math.max(0, parseFloat(concreteVolumeM3) || 0);
 
-    // IS code approximate steel percentage of concrete volume (density 7850 kg/m3)
+    // Standard structural percentages of concrete volume (density 7850 kg/m³)
     const percentages = {
-      'slab': 1.0,     // 0.8% - 1.0% (~80 kg/m3)
-      'beam': 1.8,     // 1.5% - 2.0% (~140 kg/m3)
-      'column': 2.5,   // 2.0% - 3.0% (~200 kg/m3)
-      'footing': 0.7,  // 0.6% - 0.8% (~55 kg/m3)
-      'overall': 1.25  // Residential average (~100 kg/m3)
+      'slab': 1.0,     // 0.8% - 1.0% (~80 kg/m³)
+      'beam': 1.8,     // 1.5% - 2.0% (~140 kg/m³)
+      'column': 2.5,   // 2.0% - 3.0% (~200 kg/m³)
+      'footing': 0.7,  // 0.6% - 0.8% (~55 kg/m³)
+      'overall': 1.25  // Residential average (~100 kg/m³)
     };
 
     const p = percentages[memberType] || 1.0;
@@ -181,16 +204,17 @@ const CivilCalculators = {
       memberType: memberType,
       percentage: p,
       totalSteelKg: totalSteelKg,
-      totalSteelTon: totalSteelTon
+      totalSteelTon: totalSteelTon,
+      assumptions: 'Standard IS 456 thumb rules. Steel density = 7,850 kg/m³. Actual rebar must follow structural engineering drawings and Bar Bending Schedule (BBS).'
     };
   },
 
   calculateRebarWeight: function(diameterMm, lengthM, barCount = 1) {
-    diameterMm = parseFloat(diameterMm) || 0;
-    lengthM = parseFloat(lengthM) || 0;
-    barCount = parseInt(barCount) || 1;
+    diameterMm = Math.max(0, parseFloat(diameterMm) || 0);
+    lengthM = Math.max(0, parseFloat(lengthM) || 0);
+    barCount = Math.max(1, parseInt(barCount) || 1);
 
-    // Unit weight = D^2 / 162.28 kg/m
+    // Unit weight = D² / 162.28 kg/m
     const unitWeightKgPerM = (diameterMm * diameterMm) / 162.28;
     const singleBarWeightKg = unitWeightKgPerM * lengthM;
     const totalWeightKg = singleBarWeightKg * barCount;
@@ -200,16 +224,17 @@ const CivilCalculators = {
       lengthM: lengthM,
       barCount: barCount,
       unitWeightKgPerM: unitWeightKgPerM,
-      totalWeightKg: totalWeightKg
+      totalWeightKg: totalWeightKg,
+      assumptions: 'Standard formula W = D² / 162.28 kg per meter derived from steel density (7850 kg/m³).'
     };
   },
 
-  // 5. CEMENT / SAND / AGGREGATE BATCH MIX
+  // 6. CEMENT / SAND / AGGREGATE BATCH MIX
   calculateCustomBatch: function(dryVolumeM3, partCement = 1, partSand = 2, partAgg = 4) {
-    dryVolumeM3 = parseFloat(dryVolumeM3) || 0;
-    partCement = parseFloat(partCement) || 1;
-    partSand = parseFloat(partSand) || 2;
-    partAgg = parseFloat(partAgg) || 4;
+    dryVolumeM3 = Math.max(0, parseFloat(dryVolumeM3) || 0);
+    partCement = Math.max(0.1, parseFloat(partCement) || 1);
+    partSand = Math.max(0, parseFloat(partSand) || 2);
+    partAgg = Math.max(0, parseFloat(partAgg) || 4);
 
     const totalParts = partCement + partSand + partAgg;
     const cementVol = (dryVolumeM3 * partCement) / totalParts;
@@ -223,19 +248,20 @@ const CivilCalculators = {
       sandM3: sandVol,
       sandCft: sandVol * 35.3147,
       aggM3: aggVol,
-      aggCft: aggVol * 35.3147
+      aggCft: aggVol * 35.3147,
+      assumptions: 'Volumetric batch proportioning. Cement density taken as 1440 kg/m³ (50 kg per bag).'
     };
   },
 
-  // 6. FLOORING CALCULATOR
+  // 7. FLOORING CALCULATOR
   calculateFlooring: function(floorAreaSqM, tileWidthMm = 600, tileLengthMm = 600, wastagePct = 8) {
-    floorAreaSqM = parseFloat(floorAreaSqM) || 0;
-    tileWidthMm = parseFloat(tileWidthMm) || 600;
-    tileLengthMm = parseFloat(tileLengthMm) || 600;
-    wastagePct = parseFloat(wastagePct) || 8;
+    floorAreaSqM = Math.max(0, parseFloat(floorAreaSqM) || 0);
+    tileWidthMm = Math.max(50, parseFloat(tileWidthMm) || 600);
+    tileLengthMm = Math.max(50, parseFloat(tileLengthMm) || 600);
+    wastagePct = Math.max(0, parseFloat(wastagePct) || 8);
 
     const tileAreaSqM = (tileWidthMm / 1000) * (tileLengthMm / 1000);
-    const netTiles = floorAreaSqM / tileAreaSqM;
+    const netTiles = tileAreaSqM > 0 ? (floorAreaSqM / tileAreaSqM) : 0;
     const grossTiles = Math.ceil(netTiles * (1 + wastagePct / 100));
 
     // Bedding mortar: 25mm thickness 1:4 mix
@@ -248,25 +274,27 @@ const CivilCalculators = {
       floorAreaSqM: floorAreaSqM,
       floorAreaSqFt: floorAreaSqM * 10.7639,
       tileAreaSqM: tileAreaSqM,
+      netTiles: Math.ceil(netTiles),
       grossTiles: grossTiles,
       wastagePct: wastagePct,
       cementBags: cementBags,
-      sandCft: sandCft
+      sandCft: sandCft,
+      assumptions: 'Includes 25mm bedding mortar in CM 1:4 and user-specified tile perimeter cutting wastage (default 8%).'
     };
   },
 
-  // 7. PAINTING CALCULATOR
+  // 8. PAINTING CALCULATOR
   calculatePainting: function(surfaceAreaSqM, paintType = 'interior_emulsion', coats = 2) {
-    surfaceAreaSqM = parseFloat(surfaceAreaSqM) || 0;
-    coats = parseInt(coats) || 2;
+    surfaceAreaSqM = Math.max(0, parseFloat(surfaceAreaSqM) || 0);
+    coats = Math.max(1, parseInt(coats) || 2);
 
     const surfaceAreaSqFt = surfaceAreaSqM * 10.7639;
 
-    // Coverage rates (sq.ft / liter)
-    // Primer: ~120 sq.ft/L
-    // Interior Emulsion (2 coats): ~65 sq.ft/L
-    // Exterior Emulsion (2 coats): ~55 sq.ft/L
-    // Putty: ~12 sq.ft/kg (2 coats)
+    // Standard practical coverage rates:
+    // Primer: ~120 sq.ft / L
+    // Interior Emulsion (2 coats): ~65 sq.ft / L
+    // Exterior Emulsion (2 coats): ~55 sq.ft / L
+    // Wall Putty (2 coats): ~12 sq.ft / kg
     const primerLiters = Math.ceil(surfaceAreaSqFt / 120);
     const paintCoverage = paintType === 'exterior_emulsion' ? 55 : 65;
     const paintLiters = Math.ceil((surfaceAreaSqFt / paintCoverage) * (coats / 2));
@@ -278,25 +306,26 @@ const CivilCalculators = {
       primerLiters: primerLiters,
       paintLiters: paintLiters,
       puttyKg: puttyKg,
-      coats: coats
+      coats: coats,
+      assumptions: 'Coverage estimates based on smooth plastered surface prepared with 2 coats of wall putty and 1 coat water-based primer.'
     };
   },
 
-  // 8. EXCAVATION CALCULATOR
+  // 9. EXCAVATION & EARTHWORK CALCULATOR
   calculateExcavation: function(lengthM, widthM, depthM, soilBulkingPct = 25) {
-    lengthM = parseFloat(lengthM) || 0;
-    widthM = parseFloat(widthM) || 0;
-    depthM = parseFloat(depthM) || 0;
-    soilBulkingPct = parseFloat(soilBulkingPct) || 25;
+    lengthM = Math.max(0, parseFloat(lengthM) || 0);
+    widthM = Math.max(0, parseFloat(widthM) || 0);
+    depthM = Math.max(0, parseFloat(depthM) || 0);
+    soilBulkingPct = Math.max(0, parseFloat(soilBulkingPct) || 25);
 
     const netVolumeM3 = lengthM * widthM * depthM;
     const bulkedVolumeM3 = netVolumeM3 * (1 + soilBulkingPct / 100);
 
-    // 1 Brass = 100 cu.ft = 2.8317 m3
+    // 1 Brass = 100 cu.ft = 2.8317 m³
     const netVolumeCft = netVolumeM3 * 35.3147;
     const brass = netVolumeCft / 100;
 
-    // Typical dump truck / tipper = 6 m3 capacity
+    // Typical dump truck / tipper = 6 m³ capacity
     const truckLoads = Math.ceil(bulkedVolumeM3 / 6);
 
     return {
@@ -304,26 +333,27 @@ const CivilCalculators = {
       bulkedVolumeM3: bulkedVolumeM3,
       netVolumeCft: netVolumeCft,
       brass: brass,
-      truckLoads: truckLoads
+      truckLoads: truckLoads,
+      assumptions: 'Earth excavation in ordinary soil as per IS 1200 Part 1. Soil expansion/bulking factor taken as 25% for truck haulage.'
     };
   },
 
-  // 9. DOOR & WINDOW CALCULATOR
+  // 10. DOOR & WINDOW CALCULATOR
   calculateOpenings: function(doorsCount, windowsCount, ventCount = 0) {
-    doorsCount = parseInt(doorsCount) || 0;
-    windowsCount = parseInt(windowsCount) || 0;
-    ventCount = parseInt(ventCount) || 0;
+    doorsCount = Math.max(0, parseInt(doorsCount) || 0);
+    windowsCount = Math.max(0, parseInt(windowsCount) || 0);
+    ventCount = Math.max(0, parseInt(ventCount) || 0);
 
-    // Standard Sizes:
-    // Door D1: 2.1m x 0.9m = 1.89 m2
-    // Window W1: 1.2m x 1.2m = 1.44 m2
-    // Ventilator V: 0.6m x 0.6m = 0.36 m2
+    // Standard residential opening sizes:
+    // Door D1: 2.1m × 0.9m = 1.89 m²
+    // Window W1: 1.2m × 1.2m = 1.44 m²
+    // Ventilator V: 0.6m × 0.6m = 0.36 m²
     const doorAreaM2 = doorsCount * 1.89;
     const windowAreaM2 = windowsCount * 1.44;
     const ventAreaM2 = ventCount * 0.36;
     const totalDeductionM2 = doorAreaM2 + windowAreaM2 + ventAreaM2;
 
-    // Frame wood volume estimate: Door frame ~0.065 m3, Window frame ~0.045 m3
+    // Frame timber volume: Door frame ~0.065 m³, Window frame ~0.045 m³
     const frameWoodM3 = (doorsCount * 0.065) + (windowsCount * 0.045);
     const frameWoodCft = frameWoodM3 * 35.3147;
 
@@ -334,16 +364,17 @@ const CivilCalculators = {
       totalOpenings: doorsCount + windowsCount + ventCount,
       totalDeductionM2: totalDeductionM2,
       frameWoodM3: frameWoodM3,
-      frameWoodCft: frameWoodCft
+      frameWoodCft: frameWoodCft,
+      assumptions: 'Deductions calculated in accordance with IS 1200 Part 3 (no deduction for openings < 0.5 m²; full deduction for doors and standard windows).'
     };
   },
 
-  // 10. ROOF AREA & PITCH CALCULATOR
+  // 11. ROOF AREA & PITCH CALCULATOR
   calculateRoof: function(planLengthM, planWidthM, roofType = 'flat', pitchDegrees = 20, overhangM = 0.45) {
-    planLengthM = parseFloat(planLengthM) || 0;
-    planWidthM = parseFloat(planWidthM) || 0;
-    overhangM = parseFloat(overhangM) || 0.45;
-    pitchDegrees = parseFloat(pitchDegrees) || 20;
+    planLengthM = Math.max(0, parseFloat(planLengthM) || 0);
+    planWidthM = Math.max(0, parseFloat(planWidthM) || 0);
+    overhangM = Math.max(0, parseFloat(overhangM) || 0.45);
+    pitchDegrees = Math.max(0, Math.min(85, parseFloat(pitchDegrees) || 20));
 
     const extLength = planLengthM + (2 * overhangM);
     const extWidth = planWidthM + (2 * overhangM);
@@ -358,7 +389,7 @@ const CivilCalculators = {
       ridgeLengthM = extLength;
     }
 
-    // Corrugated sheets or clay tiles count (Standard sheet ~ 3.0m x 1.0m with overlap = 2.4 m2)
+    // Corrugated roofing sheet or clay tile allowance (Standard sheet ~ 3.0m × 1.0m with overlap = 2.4 m²)
     const sheetsCount = Math.ceil(trueRoofAreaM2 / 2.4);
 
     return {
@@ -367,15 +398,16 @@ const CivilCalculators = {
       trueRoofAreaSqFt: trueRoofAreaM2 * 10.7639,
       ridgeLengthM: ridgeLengthM,
       sheetsCount: sheetsCount,
-      roofType: roofType
+      roofType: roofType,
+      assumptions: 'Geometric slope formula True Area = Projected Area / cos(pitch). Overhang added to both eaves.'
     };
   },
 
-  // 11. AREA & VOLUME QUICK GEOMETRY
+  // 12. AREA & VOLUME QUICK GEOMETRY
   calculateGeometry: function(shape, p1, p2, p3) {
-    p1 = parseFloat(p1) || 0;
-    p2 = parseFloat(p2) || 0;
-    p3 = parseFloat(p3) || 0;
+    p1 = Math.max(0, parseFloat(p1) || 0);
+    p2 = Math.max(0, parseFloat(p2) || 0);
+    p3 = Math.max(0, parseFloat(p3) || 0);
 
     let area = 0;
     let volume = 0;
@@ -387,22 +419,29 @@ const CivilCalculators = {
         break;
       case 'trapezoid': // p1 = a, p2 = b, p3 = h
         area = ((p1 + p2) / 2) * p3;
+        volume = 0;
         break;
       case 'circle': // p1 = radius, p2 = height
         area = Math.PI * p1 * p1;
         volume = area * p2;
         break;
-      case 'trapezoidal_footing': // Frustum: p1 = Area1, p2 = Area2, p3 = Depth
-        // V = h/3 * (A1 + A2 + sqrt(A1*A2))
+      case 'trapezoidal_footing': // Frustum: p1 = Bottom Area A1, p2 = Top Area A2, p3 = Height H
+        // V = (H / 3) * (A1 + A2 + sqrt(A1 * A2))
         area = (p1 + p2) / 2;
         volume = (p3 / 3) * (p1 + p2 + Math.sqrt(p1 * p2));
         break;
     }
 
-    return { area: area, volume: volume };
+    return {
+      area: area,
+      volume: volume,
+      assumptions: shape === 'trapezoidal_footing' 
+        ? 'Prismoidal formula for truncated pyramid footing: V = (h/3) × (A₁ + A₂ + √(A₁ × A₂)).'
+        : 'Standard Euclidean mensuration geometry.'
+    };
   },
 
-  // 12. CIVIL UNIT CONVERTER
+  // 13. CIVIL UNIT CONVERTER
   convertUnits: function(value, type, fromUnit, toUnit) {
     value = parseFloat(value) || 0;
     if (fromUnit === toUnit) return value;
@@ -421,9 +460,9 @@ const CivilCalculators = {
         'sqm': 1,
         'sqft': 0.092903,
         'sqyd': 0.836127,
-        'brass': 9.2903, // 1 brass = 100 sq.ft
-        'cent': 40.4686, // 1 cent = 435.6 sq.ft
-        'guntha': 101.17, // 1 guntha = 1089 sq.ft
+        'brass': 9.2903,   // 1 brass = 100 sq.ft
+        'cent': 40.4686,   // 1 cent = 435.6 sq.ft
+        'guntha': 101.17,  // 1 guntha = 1089 sq.ft
         'acre': 4046.86,
         'hectare': 10000
       },
@@ -431,7 +470,7 @@ const CivilCalculators = {
         'cum': 1,
         'cuft': 0.0283168,
         'liter': 0.001,
-        'brass': 2.83168, // 1 brass = 100 cu.ft
+        'brass': 2.83168,  // 1 brass = 100 cu.ft
         'gallon': 0.00378541
       },
       weight: {
@@ -457,4 +496,9 @@ const CivilCalculators = {
   }
 };
 
-window.CivilCalculators = CivilCalculators;
+if (typeof window !== 'undefined') {
+  window.CivilCalculators = CivilCalculators;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CivilCalculators;
+}

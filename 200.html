@@ -9,20 +9,20 @@
 </head>
 <body>
 
-  <!-- ACADEMIC DISCLAIMER BANNER (Section 17) -->
+  <!-- ACADEMIC & ENGINEERING DISCLAIMER BANNER (Phase 14 Verbatim) -->
   <div class="academic-banner">
     <div>
       <span class="academic-badge">ACADEMIC PROTOTYPE</span>
-      CIVIL ESTIMATION A1 • Final-Year Civil Engineering Project Prototype (IS 456 / IS 1200 Compliant)
+      AI-assisted quantities and costs are preliminary estimates. All dimensions, material quantities, structural details, rates and totals must be verified against project-specific drawings, specifications, applicable standards and current local rates before actual construction or contractual use.
     </div>
-    <div class="text-xs text-amber-800">IS 456:2000 • CPWD Norms</div>
+    <div class="text-xs text-amber-800 whitespace-nowrap hidden md:block">IS 456:2000 • IS 1200 • CPWD</div>
   </div>
 
   <div class="app-container">
 
     <!-- FIXED TOP HEADER -->
     <header class="app-header">
-      <div class="brand-wrapper">
+      <div class="brand-wrapper" title="Go to Dashboard">
         <div class="app-logo-badge">CE-A1</div>
         <div class="app-title-group">
           <h1 class="app-name">CIVIL ESTIMATION A1</h1>
@@ -34,15 +34,20 @@
       <nav class="top-nav">
         <a href="#home" class="top-nav-link active" data-nav-target="home">Dashboard</a>
         <a href="#plan" class="top-nav-link" data-nav-target="plan">2D Plan AI</a>
+        <a href="#rates" class="top-nav-link" data-nav-target="rates">Material Rates</a>
         <a href="#calculators" class="top-nav-link" data-nav-target="calculators">Calculators</a>
         <a href="#boq" class="top-nav-link" data-nav-target="boq">BOQ Generator</a>
         <a href="#report" class="top-nav-link" data-nav-target="report">Report / PDF</a>
         <a href="#saved" class="top-nav-link" data-nav-target="saved">Saved Projects</a>
       </nav>
 
-      <div class="header-status-badge">
-        <span class="status-dot"></span>
-        <span>Online</span>
+      <div class="header-actions">
+        <button class="header-btn" onclick="App.openSettingsModal()" title="Application Settings">⚙️ <span>Settings</span></button>
+        <button class="header-btn" onclick="App.openAboutModal()" title="About Civil Estimation A1">ℹ️ <span>About</span></button>
+        <div class="header-status-badge hidden sm:inline-flex">
+          <span class="status-dot"></span>
+          <span>Online</span>
+        </div>
       </div>
     </header>
 
@@ -50,14 +55,14 @@
     <main class="view-container">
 
       <!-- ===================================================================
-           VIEW 1: HOME DASHBOARD (Sections 3 & 16)
+           VIEW 1: HOME DASHBOARD
            Header -> Search -> Categories -> 2D Plan Upload Card -> Quick Estimate -> Tool Grid
            =================================================================== -->
       <section id="view_home" class="app-view active">
         <!-- Search Bar -->
         <div class="search-bar-wrap">
           <span class="search-icon">🔍</span>
-          <input type="text" id="toolSearchInput" class="search-input" placeholder="Search calculators (Concrete, Bricks, Steel, Flooring...)...">
+          <input type="text" id="toolSearchInput" class="search-input" placeholder="Search calculators & saved projects (Concrete, Bricks, Steel, Flooring...)...">
         </div>
 
         <!-- Category Filter Chips -->
@@ -77,25 +82,25 @@
             <div class="hero-text">
               <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; margin-bottom: 6px;">CORE FEATURE</span>
               <h3>2D Building Plan Upload</h3>
-              <p>Upload floor plan (JPG/PNG/PDF) for AI computer vision boundary & dimension takeoff.</p>
+              <p>Upload floor plan (JPG/PNG/PDF) for AI boundary takeoff and manual room verification.</p>
             </div>
             <div class="hero-icon-bubble">📤</div>
           </div>
 
-          <div class="hero-feature-card secondary" data-nav-target="boq">
+          <div class="hero-feature-card secondary" data-nav-target="rates">
             <div class="hero-text">
-              <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; margin-bottom: 6px;">FINANCIAL TAKEOFF</span>
-              <h3>BOQ & Cost Estimate</h3>
-              <p>Live Schedule of Rates (SOR), editable quantities, GST & contingency calculations.</p>
+              <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff; margin-bottom: 6px;">NEW ENGINE</span>
+              <h3>Material Rates & Total Cost</h3>
+              <p>Editable rates, CPWD sources, pending rate validation, and unified BOQ sync.</p>
             </div>
-            <div class="hero-icon-bubble">📋</div>
+            <div class="hero-icon-bubble">📊</div>
           </div>
         </div>
 
         <!-- Construction Tools Section Header -->
         <div class="section-heading-row">
-          <h2 class="section-title"><span>🧮</span> Civil Engineering Calculators</h2>
-          <span class="text-xs text-muted">12 Tools Available</span>
+          <h2 class="section-title"><span>🧮</span> Civil Engineering Calculators Suite</h2>
+          <span class="text-xs text-muted">13 Standard Tools Available</span>
         </div>
 
         <!-- Dynamic Tools Grid (2-column mobile, multi-column desktop) -->
@@ -105,35 +110,28 @@
         <div class="mt-4 pt-3 border-t border-slate-200">
           <div class="section-heading-row">
             <h3 class="section-title"><span>💾</span> Recent Projects</h3>
-            <button class="btn btn-sm btn-outline" data-nav-target="saved">View All →</button>
+            <button class="btn btn-sm btn-outline" data-nav-target="saved">View All Projects →</button>
           </div>
-          <div id="quickRecentProjects" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-            <div class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between cursor-pointer hover:border-primary transition" onclick="StorageManager.loadProject('proj_sample_1')">
-              <div>
-                <h4 class="font-bold text-sm text-slate-800">Green Villa 2BHK Residence</h4>
-                <p class="text-xs text-slate-500">850 sq.ft • Coimbatore, TN</p>
-              </div>
-              <span class="font-mono font-bold text-sm text-primary">₹ 15,72,500</span>
-            </div>
-            <div class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between cursor-pointer hover:border-primary transition" onclick="StorageManager.loadProject('proj_sample_2')">
-              <div>
-                <h4 class="font-bold text-sm text-slate-800">Royal Palms Duplex House</h4>
-                <p class="text-xs text-slate-500">1,250 sq.ft (2 Flr) • Salem Highway</p>
-              </div>
-              <span class="font-mono font-bold text-sm text-primary">₹ 34,50,000</span>
-            </div>
-          </div>
+          <div id="quickRecentProjects" class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2"></div>
         </div>
       </section>
 
       <!-- ===================================================================
-           VIEW 2: 2D PLAN UPLOAD & AI ESTIMATION (Sections 1, 4, 5, 6, 13)
+           VIEW 2: 2D PLAN UPLOAD & AI ESTIMATION
            =================================================================== -->
       <section id="view_plan" class="app-view">
+        <div class="view-disclaimer">
+          <span>⚠️</span>
+          <div>
+            <strong>Preliminary Estimating Notice:</strong>
+            AI-assisted quantities and costs are preliminary estimates. All dimensions, material quantities, structural details, rates and totals must be verified against project-specific drawings, specifications, applicable standards and current local rates before actual construction or contractual use.
+          </div>
+        </div>
+
         <div class="section-heading-row">
           <div>
-            <h2 class="section-title"><span>📤</span> 2D Building Plan Upload & AI Takeoff</h2>
-            <p class="text-xs text-muted">Academic Computer Vision Prototype for Dimension & Room Takeoff</p>
+            <h2 class="section-title"><span>📤</span> 2D Building Plan Upload & Verification</h2>
+            <p class="text-xs text-muted">Academic Computer Vision & Manual Dimension Verification Takeoff (IS 1200 / IS 456)</p>
           </div>
           <button class="btn btn-sm btn-outline" onclick="App.promptSaveProject()">💾 Save Project</button>
         </div>
@@ -145,7 +143,7 @@
             <div class="upload-card" id="uploadDropzone" onclick="document.getElementById('planFileInput').click()">
               <div class="upload-icon-circle">📁</div>
               <div class="upload-main-text">Upload Building Plan</div>
-              <div class="upload-sub-text">Tap to select or drag & drop floor plan</div>
+              <div class="upload-sub-text">Tap to select or drag & drop floor plan (up to 25MB)</div>
               <div class="file-type-badges">
                 <span class="file-pill">JPG</span>
                 <span class="file-pill">JPEG</span>
@@ -165,7 +163,7 @@
               </select>
             </div>
 
-            <!-- File Selected Status Bar -->
+            <!-- File Selected Status Bar with Replace & Remove -->
             <div class="file-status-card">
               <div class="file-info-group">
                 <div class="file-icon">📐</div>
@@ -174,12 +172,44 @@
                   <div class="file-meta" id="selectedFileSize">Sample Architectural Drawing</div>
                 </div>
               </div>
-              <span class="status-badge status-ready" id="fileStatusBadge">Plan Ready</span>
+              <div class="flex items-center gap-2">
+                <span class="status-badge status-ready" id="fileStatusBadge">Plan Ready</span>
+                <button class="btn-icon hover:bg-slate-200" onclick="document.getElementById('planFileInput').click()" title="Replace File">🔄</button>
+                <button class="btn-icon text-red-500 hover:bg-red-50" onclick="PlanAnalyzer.removeUploadedFile()" title="Remove File">✕</button>
+              </div>
             </div>
 
             <!-- Project Inputs for Prototype Verification -->
             <div class="bg-white p-4 border border-slate-200 rounded-xl mt-3">
-              <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Project Dimensions</h4>
+              <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Project Information & Geometry</h4>
+              
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <div class="input-block">
+                  <label>Project Title</label>
+                  <input type="text" id="projNameInput" value="Residential G+1 Construction Project">
+                </div>
+                <div class="input-block">
+                  <label>Site Location</label>
+                  <input type="text" id="projLocationInput" value="Plot No. 42, Green Avenue, Phase-II">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <div class="input-block">
+                  <label>Building Type</label>
+                  <select id="projBuildingTypeInput">
+                    <option value="residential_g" selected>Residential Ground Floor (G)</option>
+                    <option value="residential_g1">Residential Duplex (G+1)</option>
+                    <option value="commercial">Commercial Low-Rise</option>
+                    <option value="villa">Luxury Villa Frame</option>
+                  </select>
+                </div>
+                <div class="input-block">
+                  <label>Technical Notes</label>
+                  <input type="text" id="projNotesInput" value="Standard M20 RCC frame with modular brickwork">
+                </div>
+              </div>
+
               <div class="plan-inputs-grid">
                 <div class="input-block">
                   <label>Built-up Area (sq.ft)</label>
@@ -223,12 +253,12 @@
           <div>
             <div class="plan-canvas-card">
               <div class="canvas-toolbar">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-xs font-bold text-slate-700">CAD Vision Layers:</span>
                   <div class="filter-chip-group">
                     <button class="filter-chip active" data-filter="normal" onclick="PlanAnalyzer.setFilter('normal')">Original Plan</button>
                     <button class="filter-chip" data-filter="grayscale" onclick="PlanAnalyzer.setFilter('grayscale')">Binarized CAD</button>
-                    <button class="filter-chip" data-filter="canny" onclick="PlanAnalyzer.setFilter('canny')">Canny Edge Detection</button>
+                    <button class="filter-chip" data-filter="canny" onclick="PlanAnalyzer.setFilter('canny')">Canny Edges</button>
                     <button class="filter-chip" data-filter="overlay" onclick="PlanAnalyzer.setFilter('overlay')">AI Segmentation & OCR</button>
                   </div>
                 </div>
@@ -239,34 +269,37 @@
               </div>
 
               <div class="flex items-center justify-between mt-2 text-xs text-muted">
-                <span>Scale: ~35 px/meter • Calibration: Metric Grid</span>
+                <span>Scale: ~35 px/meter • Metric Calibration</span>
                 <span>Coordinates: Active CAD Viewport</span>
               </div>
             </div>
+
+            <!-- Manual Room Verification Table Container (Phase 7) -->
+            <div id="roomVerificationEditor"></div>
           </div>
         </div>
 
-        <!-- Takeoff Results Section (Auto populated after AI analysis) -->
+        <!-- Takeoff Results Section (Auto populated after AI analysis or manual verification) -->
         <div id="aiResultsSection" class="results-card hidden">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
             <div>
-              <span class="badge" style="background: #dcfce7; color: #166534;">AI EXTRACTION VERIFIED</span>
-              <h3 class="font-bold text-base text-slate-900 mt-1">Plan Material Quantity Takeoff</h3>
-              <p class="text-xs text-slate-500">Quantities derived via Computer Vision vector parsing & IS 1200 rules</p>
+              <span class="badge" style="background: #dcfce7; color: #166534;">EXTRACTION & MEASUREMENTS VERIFIED</span>
+              <h3 class="font-bold text-base text-slate-900 mt-1">Plan Material Quantity Takeoff (IS 1200)</h3>
+              <p class="text-xs text-slate-500">Derived from verified dimensions and standard civil engineering rules</p>
             </div>
             <div class="flex gap-2">
-              <button class="btn btn-sm btn-primary" onclick="PlanAnalyzer.sendToBOQ()">📋 Send to BOQ Generator</button>
+              <button class="btn btn-sm btn-primary" onclick="PlanAnalyzer.sendToBOQ()">📋 Send to BOQ & Material Rates</button>
               <button class="btn btn-sm btn-outline" onclick="ReportGenerator.generateReport()">📄 Open Estimate Report</button>
             </div>
           </div>
 
           <!-- Detected Rooms Chips -->
           <div class="mt-3">
-            <h4 class="text-xs font-bold text-slate-600 uppercase">Detected Architectural Rooms</h4>
+            <h4 class="text-xs font-bold text-slate-600 uppercase">Architectural Rooms & Enclosures</h4>
             <div id="detectedRoomsList" class="rooms-chip-grid"></div>
           </div>
 
-          <!-- Material Takeoff Table (Matching Section 6 exactly) -->
+          <!-- Material Takeoff Table -->
           <div class="data-table-wrap">
             <table class="custom-table">
               <thead>
@@ -283,40 +316,114 @@
       </section>
 
       <!-- ===================================================================
-           VIEW 3: ALL CALCULATORS VIEW (Section 3)
+           VIEW 3: MATERIAL RATE + TOTAL COST CALCULATOR (Phase 3 & 4)
+           =================================================================== -->
+      <section id="view_rates" class="app-view">
+        <div class="view-disclaimer">
+          <span>⚠️</span>
+          <div>
+            <strong>Rate Verification Notice:</strong>
+            Rates shown are standard baseline rates (CPWD DSR 2023-26 / regional indices). All rates must be verified against current local supplier quotations and regional market taxes before procurement.
+          </div>
+        </div>
+
+        <div class="section-heading-row">
+          <div>
+            <h2 class="section-title"><span>📊</span> Material Rate + Total Cost Calculator</h2>
+            <p class="text-xs text-muted">Real-time unit rate calculations, missing-rate pending alerts, and unified BOQ synchronization</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-sm btn-primary" onclick="document.getElementById('addBOQModal').classList.remove('hidden')">➕ Add Custom Material</button>
+            <button class="btn btn-sm btn-outline" onclick="App.switchTab('boq')">📋 View Full BOQ</button>
+          </div>
+        </div>
+
+        <!-- Pending Rates Alert Banner -->
+        <div id="ratePendingNotice" class="hidden mb-3"></div>
+
+        <!-- Cost Summary Overview Cards (Phase 10) -->
+        <div class="cost-summary-panel">
+          <div class="cost-summary-box highlight">
+            <div class="cost-box-title">Total Estimated Cost</div>
+            <div class="cost-box-value" id="rateGrandTotal">₹ 0</div>
+            <div class="cost-box-sub">Including Labour, Overheads & GST</div>
+          </div>
+          <div class="cost-summary-box">
+            <div class="cost-box-title">Materials Cost</div>
+            <div class="cost-box-value" id="rateMaterialSubtotal">₹ 0</div>
+            <div class="cost-box-sub">Net materials total</div>
+          </div>
+          <div class="cost-summary-box">
+            <div class="cost-box-title">Labour & Execution</div>
+            <div class="cost-box-value" id="rateLabourAmount">₹ 0</div>
+            <div class="cost-box-sub">Masonry, bar bending & casting</div>
+          </div>
+          <div class="cost-summary-box">
+            <div class="cost-box-title">Site Facilities & Scaffolding</div>
+            <div class="cost-box-value" id="rateOtherAmount">₹ 25,000</div>
+            <div class="cost-box-sub">Equipment, tools & safety</div>
+          </div>
+        </div>
+
+        <!-- Material Rates Table -->
+        <div class="data-table-wrap bg-white rounded-xl border border-slate-200 p-2 shadow-sm mt-3">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;" class="text-center">Sl.</th>
+                <th>Material Name & Source</th>
+                <th style="width: 100px;" class="text-center">Unit</th>
+                <th style="width: 110px;" class="text-right">Quantity</th>
+                <th style="width: 130px;" class="text-right">Rate per Unit (₹)</th>
+                <th style="width: 140px;" class="text-right">Amount (₹)</th>
+                <th style="width: 45px;" class="text-center">Act</th>
+              </tr>
+            </thead>
+            <tbody id="materialRateTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VIEW 4: ALL CALCULATORS VIEW
            =================================================================== -->
       <section id="view_calculators" class="app-view">
         <div class="section-heading-row">
           <div>
             <h2 class="section-title"><span>🧮</span> Civil Engineering Calculators Suite</h2>
-            <p class="text-xs text-muted">Standard Indian Code Formulas (IS 456, IS 1200, IS 2212, CPWD)</p>
+            <p class="text-xs text-muted">13 Standard Indian Code Tools (IS 456:2000, IS 1200, IS 2212, CPWD)</p>
           </div>
         </div>
-        <p class="text-xs text-slate-500 mb-3">Select any specialized calculator below to run quick structural, masonry, finish or quantity calculations.</p>
-        <div class="tools-grid" id="allCalculatorsGrid">
-          <!-- Will render all tools -->
-        </div>
+        <p class="text-xs text-slate-500 mb-3">Select any specialized calculator below to run quick structural, masonry, finish, opening, or geometry calculations.</p>
+        <div class="tools-grid" id="allCalculatorsGrid"></div>
       </section>
 
       <!-- ===================================================================
-           VIEW 4: BOQ GENERATOR (Section 7)
+           VIEW 5: BOQ GENERATOR
            =================================================================== -->
       <section id="view_boq" class="app-view">
+        <div class="view-disclaimer">
+          <span>⚠️</span>
+          <div>
+            <strong>Disclaimer:</strong> AI-assisted quantities and costs are preliminary estimates. All dimensions, material quantities, structural details, rates and totals must be verified against project-specific drawings, specifications, applicable standards and current local rates before actual construction or contractual use.
+          </div>
+        </div>
+
         <!-- Banner Total -->
         <div class="boq-header-banner">
           <div>
             <div class="text-xs text-sky-200 uppercase font-semibold">Bill of Quantities (BOQ)</div>
             <h2 class="boq-banner-title">Preliminary Construction Cost Estimate</h2>
-            <div class="text-xs text-slate-300 mt-1">Live rates based on standard Schedule of Rates (SOR)</div>
+            <div class="text-xs text-slate-300 mt-1">Unified with Material Rate Engine • Indian Standard Schedule of Rates (SOR)</div>
           </div>
           <div class="text-right">
-            <div class="text-xs text-sky-200">Total Estimate (with GST & Contingencies)</div>
+            <div class="text-xs text-sky-200">Total Estimate (with GST & Overheads)</div>
             <div class="boq-banner-amount" id="boqGrandTotalBanner">₹ 0</div>
           </div>
         </div>
 
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div class="flex gap-2">
+          <div class="flex gap-2 flex-wrap">
             <button class="btn btn-sm btn-primary" onclick="BOQEngine.exportToCSV()">📥 Export CSV / Excel</button>
             <button class="btn btn-sm btn-outline" onclick="ReportGenerator.generateReport()">📄 Print / PDF Report</button>
             <button class="btn btn-sm btn-outline" onclick="BOQEngine.loadDefaultBOQ(); BOQEngine.render(); App.showToast('Reset to default SOR rates', 'info')">🔄 Reset Rates</button>
@@ -345,7 +452,7 @@
         <!-- Totals Card -->
         <div class="boq-totals-card">
           <div class="boq-total-row">
-            <span>Subtotal (Net Material & Labor Cost):</span>
+            <span>Subtotal (Net Material & Labour Cost):</span>
             <span class="font-mono font-bold" id="boqSubtotal">₹ 0</span>
           </div>
           <div class="boq-total-row">
@@ -364,7 +471,7 @@
       </section>
 
       <!-- ===================================================================
-           VIEW 5: ESTIMATE REPORT / PDF (Sections 8 & 17)
+           VIEW 6: ESTIMATE REPORT / PDF
            =================================================================== -->
       <section id="view_report" class="app-view">
         <div class="flex items-center justify-between mb-4 no-print">
@@ -385,9 +492,17 @@
       </section>
 
       <!-- ===================================================================
-           VIEW 6: SAVED PROJECTS (Section 9)
+           VIEW 7: SAVED PROJECTS
            =================================================================== -->
       <section id="view_saved" class="app-view">
+        <!-- Browser Storage Notice Banner (Phase 12) -->
+        <div class="view-disclaimer">
+          <span>💾</span>
+          <div>
+            <strong>Browser Storage Notice:</strong> Projects are stored locally in your browser. Data is not synchronized across different devices and may be lost if browser cache or cookies are cleared. Export reports to PDF for permanent records.
+          </div>
+        </div>
+
         <div class="section-heading-row">
           <div>
             <h2 class="section-title"><span>💾</span> Saved Construction Projects</h2>
@@ -402,7 +517,7 @@
     </main>
 
     <!-- ===================================================================
-         MOBILE BOTTOM NAVIGATION (Section 11)
+         MOBILE BOTTOM NAVIGATION
          =================================================================== -->
     <nav class="bottom-nav">
       <button class="bottom-nav-item active" data-nav-target="home">
@@ -411,7 +526,11 @@
       </button>
       <button class="bottom-nav-item" data-nav-target="plan">
         <span class="nav-icon">📤</span>
-        <span>2D Plan AI</span>
+        <span>2D Plan</span>
+      </button>
+      <button class="bottom-nav-item" data-nav-target="rates">
+        <span class="nav-icon">📊</span>
+        <span>Rates</span>
       </button>
       <button class="bottom-nav-item" data-nav-target="calculators">
         <span class="nav-icon">🧮</span>
@@ -419,7 +538,7 @@
       </button>
       <button class="bottom-nav-item" data-nav-target="boq">
         <span class="nav-icon">📋</span>
-        <span>BOQ & Cost</span>
+        <span>BOQ</span>
       </button>
       <button class="bottom-nav-item" data-nav-target="saved">
         <span class="nav-icon">💾</span>
@@ -449,7 +568,7 @@
     <div class="modal-card text-center p-6" style="max-width: 420px;">
       <div class="text-4xl mb-2 animate-bounce">🤖</div>
       <h3 class="font-bold text-slate-800 text-lg">AI Floor Plan Analysis</h3>
-      <p class="text-xs text-slate-500 mt-1">Computer vision line detection, contour tracing & OCR extraction</p>
+      <p class="text-xs text-slate-500 mt-1">Computer vision line detection, contour tracing & vector extraction</p>
 
       <div class="progress-container">
         <div id="aiProgressBar" class="progress-bar"></div>
@@ -461,50 +580,189 @@
     </div>
   </div>
 
-  <!-- 3. Add Custom BOQ Item Modal -->
+  <!-- 3. Add Custom BOQ / Material Item Modal -->
   <div id="addBOQModal" class="modal-overlay hidden">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-header">
-        <h3 class="modal-title">Add Custom BOQ Item</h3>
+        <h3 class="modal-title">Add Custom Material / BOQ Item</h3>
         <button class="modal-close-btn" onclick="document.getElementById('addBOQModal').classList.add('hidden')">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Item Description:</label>
+          <label>Item Description / Material Name:</label>
           <input type="text" id="new_boq_desc" class="form-input" placeholder="e.g., Kota Stone flooring in corridors">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div class="form-group">
             <label>Unit:</label>
-            <input type="text" id="new_boq_unit" class="form-input" placeholder="m², m³, Bag, kg">
+            <input type="text" id="new_boq_unit" class="form-input" placeholder="m², m³, Bags, kg, Nos">
           </div>
           <div class="form-group">
             <label>Quantity:</label>
             <input type="number" step="any" id="new_boq_qty" class="form-input" value="10">
           </div>
         </div>
-        <div class="form-group">
-          <label>Unit Rate (₹):</label>
-          <input type="number" step="any" id="new_boq_rate" class="form-input" value="500">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label>Unit Rate (₹):</label>
+            <input type="number" step="any" id="new_boq_rate" class="form-input" value="500">
+          </div>
+          <div class="form-group">
+            <label>Rate Source:</label>
+            <input type="text" id="new_boq_source" class="form-input" placeholder="Vendor Quote" value="Local Vendor">
+          </div>
         </div>
         <div class="form-group">
           <label>Remarks / Technical Notes:</label>
-          <input type="text" id="new_boq_remarks" class="form-input" placeholder="Optional notes">
+          <input type="text" id="new_boq_remarks" class="form-input" placeholder="Optional specifications">
         </div>
         <button class="btn btn-primary w-full mt-3" onclick="
           const d = document.getElementById('new_boq_desc').value;
           const u = document.getElementById('new_boq_unit').value;
           const q = document.getElementById('new_boq_qty').value;
           const r = document.getElementById('new_boq_rate').value;
+          const src = document.getElementById('new_boq_source').value;
           const rem = document.getElementById('new_boq_remarks').value;
           if (d) {
-            BOQEngine.addItem(d, u, q, r, rem);
+            BOQEngine.addItem(d, u, q, r, rem, src);
             document.getElementById('addBOQModal').classList.add('hidden');
-            App.showToast('Item added to BOQ!', 'success');
+            App.showToast('Item added successfully!', 'success');
           }
         ">
-          Add Item to BOQ
+          Add Material to Estimate
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Save Project Modal -->
+  <div id="saveProjectModal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Save Project Estimate</h3>
+        <button class="modal-close-btn" onclick="document.getElementById('saveProjectModal').classList.add('hidden')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Project Name:</label>
+          <input type="text" id="save_proj_name" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Client Name:</label>
+          <input type="text" id="save_proj_client" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Site Location:</label>
+          <input type="text" id="save_proj_location" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Engineer / Estimator:</label>
+          <input type="text" id="save_proj_engineer" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Project Status:</label>
+          <select id="save_proj_status" class="form-input">
+            <option value="Provisional" selected>Provisional Estimate</option>
+            <option value="Draft">Draft Takeoff</option>
+            <option value="Verified">Verified Estimate</option>
+          </select>
+        </div>
+        <button class="btn btn-primary w-full mt-3" onclick="
+          const n = document.getElementById('save_proj_name').value;
+          const c = document.getElementById('save_proj_client').value;
+          const l = document.getElementById('save_proj_location').value;
+          const e = document.getElementById('save_proj_engineer').value;
+          const s = document.getElementById('save_proj_status').value;
+          if (n) {
+            StorageManager.saveProject(n, c, l, e, s);
+            document.getElementById('saveProjectModal').classList.add('hidden');
+          }
+        ">
+          Save Project to Browser Storage
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Settings Modal -->
+  <div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Application Settings</h3>
+        <button class="modal-close-btn" onclick="document.getElementById('settingsModal').classList.add('hidden')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Default Currency:</label>
+          <input type="text" class="form-input" value="₹ (INR)" readonly>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label>GST Rate (%):</label>
+            <input type="number" id="setting_gst" class="form-input" value="18" onchange="BOQEngine.taxPct = parseFloat(this.value)||18; BOQEngine.render();">
+          </div>
+          <div class="form-group">
+            <label>Contingency (%):</label>
+            <input type="number" id="setting_contingency" class="form-input" value="3" onchange="BOQEngine.contingencyPct = parseFloat(this.value)||3; BOQEngine.render();">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label>Labour Percentage (%):</label>
+            <input type="number" id="setting_labour" class="form-input" value="35" onchange="BOQEngine.labourPct = parseFloat(this.value)||35; BOQEngine.render();">
+          </div>
+          <div class="form-group">
+            <label>Wastage Allowance (%):</label>
+            <input type="number" id="setting_wastage" class="form-input" value="3" onchange="BOQEngine.wastagePct = parseFloat(this.value)||3; BOQEngine.render();">
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-200">
+          <h4 class="text-xs font-bold text-slate-700 uppercase mb-1">Local Storage Management</h4>
+          <p class="text-xs text-slate-500 mb-2">Clear saved projects and reset application cache.</p>
+          <button class="btn btn-sm btn-outline text-red-600 border-red-300 hover:bg-red-50 w-full" onclick="
+            if (confirm('Are you sure you want to clear all stored projects? This cannot be undone.')) {
+              localStorage.removeItem(StorageManager.PROJECTS_KEY);
+              StorageManager.init();
+              App.showToast('Cleared stored projects.', 'info');
+              document.getElementById('settingsModal').classList.add('hidden');
+            }
+          ">
+            🗑️ Clear Stored Projects
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. About Modal -->
+  <div id="aboutModal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">ℹ️ About CIVIL ESTIMATION A1</h3>
+        <button class="modal-close-btn" onclick="document.getElementById('aboutModal').classList.add('hidden')">✕</button>
+      </div>
+      <div class="modal-body text-xs text-slate-600 leading-relaxed">
+        <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200">
+          <div class="app-logo-badge">CE-A1</div>
+          <div>
+            <h4 class="font-bold text-slate-900 text-sm">CIVIL ESTIMATION A1</h4>
+            <p class="text-slate-500">2D Plan Upload & AI Takeoff System</p>
+          </div>
+        </div>
+        <p class="mb-2"><strong>CIVIL ESTIMATION A1</strong> is a civil engineering estimation software designed to provide fast, code-compliant preliminary quantity takeoffs and Bill of Quantities (BOQ) from 2D architectural drawings.</p>
+        <h5 class="font-bold text-slate-800 mt-2 mb-1">Code & Standard References:</h5>
+        <ul class="list-disc pl-5 space-y-1 mb-2">
+          <li><strong>IS 456:2000:</strong> Code of Practice for Plain and Reinforced Concrete.</li>
+          <li><strong>IS 1200 (Parts 1–28):</strong> Method of Measurement of Building and Civil Engineering Works.</li>
+          <li><strong>IS 2212:</strong> Code of Practice for Brickwork.</li>
+          <li><strong>CPWD DSR 2023–26:</strong> Delhi Schedule of Rates & Analysis of Rates for building civil works.</li>
+        </ul>
+        <div class="view-disclaimer mt-3">
+          <span>⚠️</span>
+          <div>
+            <strong>Mandatory Engineering Disclaimer:</strong> AI-assisted quantities and costs are preliminary estimates. All dimensions, material quantities, structural details, rates and totals must be verified against project-specific drawings, specifications, applicable standards and current local rates before actual construction or contractual use.
+          </div>
+        </div>
       </div>
     </div>
   </div>
